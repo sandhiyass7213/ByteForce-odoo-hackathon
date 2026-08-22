@@ -15,16 +15,19 @@ import {
   Plus, 
   X, 
   Building,
-  Award,
   Phone,
   Mail,
   MapPin,
-  TrendingUp,
-  History
+  History,
+  ExternalLink,
+  ChevronRight
 } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 import Header from '../../../components/Header';
 import Sidebar from '../../../components/Sidebar';
+import LeaveManagementModal from '../../../components/LeaveManagementModal';
+import AttendanceHistoryModal from '../../../components/AttendanceHistoryModal';
+import ProfilePayrollModal from '../../../components/ProfilePayrollModal';
 
 export default function EmployeeDashboardPage() {
   const router = useRouter();
@@ -38,20 +41,16 @@ export default function EmployeeDashboardPage() {
     isClockedIn, 
     clockInTime, 
     clockIn, 
-    clockOut, 
-    submitLeaveRequest 
+    clockOut 
   } = useAuth();
 
   const [isOpenMobile, setIsOpenMobile] = useState<boolean>(false);
   const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
 
-  // Leave Form State
+  // Modals state matching diagram workflow
   const [showLeaveModal, setShowLeaveModal] = useState<boolean>(false);
-  const [leaveType, setLeaveType] = useState<string>('Annual Leave');
-  const [startDate, setStartDate] = useState<string>('');
-  const [endDate, setEndDate] = useState<string>('');
-  const [reason, setReason] = useState<string>('');
-  const [formMsg, setFormMsg] = useState<string>('');
+  const [showAttendanceModal, setShowAttendanceModal] = useState<boolean>(false);
+  const [showProfileModal, setShowProfileModal] = useState<boolean>(false);
 
   // Clock Timer Simulation
   const [currentTime, setCurrentTime] = useState<string>('');
@@ -82,25 +81,10 @@ export default function EmployeeDashboardPage() {
     );
   }
 
-  const handleLeaveSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!startDate || !endDate || !reason) {
-      setFormMsg('Please fill in all required leave details.');
-      return;
-    }
-
-    submitLeaveRequest({ leaveType, startDate, endDate, reason });
-    setFormMsg('');
-    setShowLeaveModal(false);
-    setStartDate('');
-    setEndDate('');
-    setReason('');
-  };
-
   return (
     <div className="min-h-screen bg-[#0b1120] text-slate-100 flex flex-col selection:bg-indigo-500 selection:text-white">
       
-      {/* Sidebar Navigation (HR/Admin menus completely HIDDEN) */}
+      {/* Sidebar Navigation (HR/Admin menus completely HIDDEN for Employee) */}
       <Sidebar
         isCollapsed={isCollapsed}
         setIsCollapsed={setIsCollapsed}
@@ -138,13 +122,23 @@ export default function EmployeeDashboardPage() {
               </p>
             </div>
 
-            <button
-              onClick={() => setShowLeaveModal(true)}
-              className="px-4 py-2.5 rounded-xl bg-[#6366f1] hover:bg-indigo-600 text-white font-bold text-xs flex items-center gap-2 transition-all shadow-lg glow-purple shrink-0"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Apply New Leave</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowLeaveModal(true)}
+                className="px-4 py-2.5 rounded-xl bg-[#6366f1] hover:bg-indigo-600 text-white font-bold text-xs flex items-center gap-2 transition-all shadow-lg glow-purple shrink-0"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Apply New Leave</span>
+              </button>
+
+              <button
+                onClick={() => setShowProfileModal(true)}
+                className="px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-200 font-bold text-xs flex items-center gap-2 transition-all shrink-0"
+              >
+                <User className="w-4 h-4 text-indigo-400" />
+                <span>Profile & Payroll</span>
+              </button>
+            </div>
           </div>
 
           {/* Grid Layout: Attendance Clock Widget & Profile Card */}
@@ -158,13 +152,13 @@ export default function EmployeeDashboardPage() {
                     <Clock className="w-5 h-5" />
                   </div>
                   <div>
-                    <h2 className="text-base font-bold text-white">Daily Attendance Tracker</h2>
-                    <p className="text-xs text-slate-400">Log shifts, track work hours, and punch status</p>
+                    <h2 className="text-base font-bold text-white">Attendance Tracker</h2>
+                    <p className="text-xs text-slate-400">Log daily work hours & break sessions</p>
                   </div>
                 </div>
                 
                 <span className="text-xs font-mono font-bold text-indigo-400 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800">
-                  {currentTime || '09:30:00 AM'}
+                  {currentTime || '01:29:00 PM'}
                 </span>
               </div>
 
@@ -185,7 +179,7 @@ export default function EmployeeDashboardPage() {
                 </div>
 
                 <div className="p-4 rounded-2xl bg-slate-950/70 border border-slate-800/80 space-y-1">
-                  <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Work Hours Today</span>
+                  <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Work Duration</span>
                   <p className="text-lg font-mono font-bold text-white">{isClockedIn ? '5h 30m' : '0h 00m'}</p>
                   <span className="text-[10px] text-emerald-400">Target: 8h 00m</span>
                 </div>
@@ -196,28 +190,34 @@ export default function EmployeeDashboardPage() {
                 {isClockedIn ? (
                   <button
                     onClick={clockOut}
-                    className="w-full py-3.5 px-4 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs flex items-center justify-center gap-2 transition-all shadow-lg glow-rose"
+                    className="w-full py-3.5 px-4 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs flex items-center justify-center gap-2 transition-all shadow-lg"
                   >
                     <Square className="w-4 h-4 fill-white" />
-                    <span>Clock Out & End Shift</span>
+                    <span>Clock Out & End Break Session</span>
                   </button>
                 ) : (
                   <button
                     onClick={clockIn}
-                    className="w-full py-3.5 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs flex items-center justify-center gap-2 transition-all shadow-lg glow-emerald"
+                    className="w-full py-3.5 px-4 rounded-2xl bg-[#6366f1] hover:bg-indigo-600 text-white font-extrabold text-xs flex items-center justify-center gap-2 transition-all shadow-lg glow-purple"
                   >
                     <Play className="w-4 h-4 fill-white" />
-                    <span>Clock In & Start Shift</span>
+                    <span>Clock In Now</span>
                   </button>
                 )}
               </div>
             </div>
 
             {/* PROFILE CARD VIEW */}
-            <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
-              <div className="flex items-center gap-3 border-b border-slate-800/80 pb-3">
-                <User className="w-5 h-5 text-indigo-400" />
-                <h3 className="text-sm font-bold text-white">Employee Profile Card</h3>
+            <div 
+              onClick={() => setShowProfileModal(true)}
+              className="bg-slate-900/80 border border-slate-800 hover:border-indigo-500/50 rounded-3xl p-6 shadow-xl space-y-4 cursor-pointer transition-all group"
+            >
+              <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
+                <div className="flex items-center gap-3">
+                  <User className="w-5 h-5 text-indigo-400" />
+                  <h3 className="text-sm font-bold text-white">Profile Details</h3>
+                </div>
+                <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-indigo-400 transition-colors" />
               </div>
 
               <div className="flex items-center gap-3">
@@ -249,6 +249,10 @@ export default function EmployeeDashboardPage() {
                   <span className="text-slate-200 font-semibold">{user?.joinDate || '15 Jan 2022'}</span>
                 </div>
               </div>
+
+              <div className="pt-2 text-center text-[11px] text-indigo-400 font-bold">
+                Click to view Salary & Payroll statement →
+              </div>
             </div>
 
           </div>
@@ -261,9 +265,15 @@ export default function EmployeeDashboardPage() {
               <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
                 <div className="flex items-center gap-2">
                   <History className="w-4 h-4 text-indigo-400" />
-                  <h3 className="text-sm font-bold text-white">My Attendance Logs</h3>
+                  <h3 className="text-sm font-bold text-white">Attendance History</h3>
                 </div>
-                <span className="text-[10px] text-slate-400 font-mono">Recent 30 Days</span>
+                <button
+                  onClick={() => setShowAttendanceModal(true)}
+                  className="text-xs text-indigo-400 hover:text-indigo-300 font-bold flex items-center gap-1"
+                >
+                  <span>Open Calendar Picker</span>
+                  <ExternalLink className="w-3 h-3" />
+                </button>
               </div>
 
               <div className="overflow-x-auto">
@@ -305,13 +315,14 @@ export default function EmployeeDashboardPage() {
               <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
                 <div className="flex items-center gap-2">
                   <FileText className="w-4 h-4 text-purple-400" />
-                  <h3 className="text-sm font-bold text-white">My Leave Applications</h3>
+                  <h3 className="text-sm font-bold text-white">Leave Application Form & Logs</h3>
                 </div>
                 <button
                   onClick={() => setShowLeaveModal(true)}
-                  className="text-xs text-indigo-400 hover:text-indigo-300 font-bold underline"
+                  className="text-xs text-indigo-400 hover:text-indigo-300 font-bold flex items-center gap-1"
                 >
-                  + Apply
+                  <span>Open Leave Modal</span>
+                  <ExternalLink className="w-3 h-3" />
                 </button>
               </div>
 
@@ -354,84 +365,21 @@ export default function EmployeeDashboardPage() {
         </main>
       </div>
 
-      {/* APPLY LEAVE MODAL */}
-      {showLeaveModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-indigo-400" />
-                Submit Leave Application
-              </h3>
-              <button onClick={() => setShowLeaveModal(false)} className="p-1 rounded-lg text-slate-400 hover:text-white">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+      {/* THREE DIAGRAM WORKFLOW MODALS */}
+      <LeaveManagementModal
+        isOpen={showLeaveModal}
+        onClose={() => setShowLeaveModal(false)}
+      />
 
-            {formMsg && (
-              <p className="text-xs text-rose-400 bg-rose-950/50 p-2 rounded-xl border border-rose-800">{formMsg}</p>
-            )}
+      <AttendanceHistoryModal
+        isOpen={showAttendanceModal}
+        onClose={() => setShowAttendanceModal(false)}
+      />
 
-            <form onSubmit={handleLeaveSubmit} className="space-y-3 text-xs">
-              <div>
-                <label className="block font-bold text-slate-300 uppercase text-[10px] mb-1">Leave Type</label>
-                <select
-                  value={leaveType}
-                  onChange={(e) => setLeaveType(e.target.value)}
-                  className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:ring-2 focus:ring-[#6366f1]"
-                >
-                  <option value="Annual Leave">Annual Leave</option>
-                  <option value="Sick Leave">Sick Leave</option>
-                  <option value="Casual Leave">Casual Leave</option>
-                  <option value="Maternity Leave">Maternity Leave</option>
-                </select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold text-slate-300 uppercase text-[10px] mb-1">Start Date</label>
-                  <input
-                    type="date"
-                    required
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:ring-2 focus:ring-[#6366f1]"
-                  />
-                </div>
-                <div>
-                  <label className="block font-bold text-slate-300 uppercase text-[10px] mb-1">End Date</label>
-                  <input
-                    type="date"
-                    required
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:ring-2 focus:ring-[#6366f1]"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-300 uppercase text-[10px] mb-1">Reason for Leave</label>
-                <textarea
-                  rows={3}
-                  required
-                  placeholder="Provide reason for request..."
-                  value={reason}
-                  onChange={(e) => setReason(e.target.value)}
-                  className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-100 focus:ring-2 focus:ring-[#6366f1]"
-                />
-              </div>
-
-              <button
-                type="submit"
-                className="w-full py-3 bg-[#6366f1] hover:bg-indigo-600 text-white font-extrabold rounded-xl shadow-lg glow-purple transition-all"
-              >
-                Submit Application
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
+      <ProfilePayrollModal
+        isOpen={showProfileModal}
+        onClose={() => setShowProfileModal(false)}
+      />
 
     </div>
   );
