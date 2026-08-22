@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, Suspense } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { 
   Clock, 
   Play, 
@@ -20,7 +20,8 @@ import {
   MapPin,
   History,
   ExternalLink,
-  ChevronRight
+  ChevronRight,
+  Sparkles
 } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 import Header from '../../../components/Header';
@@ -29,8 +30,11 @@ import LeaveManagementModal from '../../../components/LeaveManagementModal';
 import AttendanceHistoryModal from '../../../components/AttendanceHistoryModal';
 import ProfilePayrollModal from '../../../components/ProfilePayrollModal';
 
-export default function EmployeeDashboardPage() {
+function EmployeeDashboardContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const activeTabParam = searchParams.get('tab') || 'attendance';
+
   const { 
     user, 
     role, 
@@ -47,12 +51,21 @@ export default function EmployeeDashboardPage() {
   const [isOpenMobile, setIsOpenMobile] = useState<boolean>(false);
   const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
 
-  // Modals state matching diagram workflow
+  // Active section tab control (Attendance Tracker, Leave Applications, My Profile, Salary & Payroll)
+  const [activeSection, setActiveSection] = useState<string>(activeTabParam);
+
+  useEffect(() => {
+    if (activeTabParam) {
+      setActiveSection(activeTabParam);
+    }
+  }, [activeTabParam]);
+
+  // Interactive Modals State
   const [showLeaveModal, setShowLeaveModal] = useState<boolean>(false);
   const [showAttendanceModal, setShowAttendanceModal] = useState<boolean>(false);
   const [showProfileModal, setShowProfileModal] = useState<boolean>(false);
 
-  // Clock Timer Simulation
+  // Live Timer
   const [currentTime, setCurrentTime] = useState<string>('');
 
   useEffect(() => {
@@ -81,18 +94,25 @@ export default function EmployeeDashboardPage() {
     );
   }
 
+  // Handle Clock In / Out Toggle with dynamic feedback
+  const handleClockToggle = () => {
+    if (isClockedIn) {
+      clockOut();
+    } else {
+      clockIn();
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#0b1120] text-slate-100 flex flex-col selection:bg-indigo-500 selection:text-white">
       
-      {/* Sidebar Navigation (HR/Admin menus completely HIDDEN for Employee) */}
-      <Suspense fallback={null}>
-        <Sidebar
-          isCollapsed={isCollapsed}
-          setIsCollapsed={setIsCollapsed}
-          isOpenMobile={isOpenMobile}
-          setIsOpenMobile={setIsOpenMobile}
-        />
-      </Suspense>
+      {/* Sidebar Navigation (Role Isolated for Employee) */}
+      <Sidebar
+        isCollapsed={isCollapsed}
+        setIsCollapsed={setIsCollapsed}
+        isOpenMobile={isOpenMobile}
+        setIsOpenMobile={setIsOpenMobile}
+      />
 
       {/* Main Content View */}
       <div className={`flex-1 flex flex-col transition-all duration-300 ${
@@ -117,14 +137,14 @@ export default function EmployeeDashboardPage() {
                 <span className="text-xs text-slate-400 font-mono">ID: {user?.employeeCode || 'DF-8902'}</span>
               </div>
               <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-                Welcome back, {user?.fullName || 'Sarah'}!
+                Welcome back, {user?.fullName || 'Sarah Jenkins'}!
               </h1>
               <p className="text-xs text-slate-400">
                 {user?.designation || 'Senior UX Designer'} • {user?.department || 'Product & Design'}
               </p>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2.5">
               <button
                 onClick={() => setShowLeaveModal(true)}
                 className="px-4 py-2.5 rounded-xl bg-[#6366f1] hover:bg-indigo-600 text-white font-bold text-xs flex items-center gap-2 transition-all shadow-lg glow-purple shrink-0"
@@ -143,7 +163,61 @@ export default function EmployeeDashboardPage() {
             </div>
           </div>
 
-          {/* Grid Layout: Attendance Clock Widget & Profile Card */}
+          {/* TAB SECTION SWITCHER BAR */}
+          <div className="flex items-center gap-2 border-b border-slate-800 pb-1 overflow-x-auto">
+            <button
+              onClick={() => setActiveSection('attendance')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+                activeSection === 'attendance'
+                  ? 'bg-indigo-600 text-white shadow-md glow-purple'
+                  : 'text-slate-400 hover:bg-slate-900 hover:text-slate-200'
+              }`}
+            >
+              <Clock className="w-4 h-4" />
+              <span>Attendance Tracker</span>
+            </button>
+
+            <button
+              onClick={() => setActiveSection('leaves')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+                activeSection === 'leaves'
+                  ? 'bg-indigo-600 text-white shadow-md glow-purple'
+                  : 'text-slate-400 hover:bg-slate-900 hover:text-slate-200'
+              }`}
+            >
+              <Calendar className="w-4 h-4" />
+              <span>Leave Applications</span>
+            </button>
+
+            <button
+              onClick={() => setActiveSection('profile')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+                activeSection === 'profile'
+                  ? 'bg-indigo-600 text-white shadow-md glow-purple'
+                  : 'text-slate-400 hover:bg-slate-900 hover:text-slate-200'
+              }`}
+            >
+              <User className="w-4 h-4" />
+              <span>My Profile</span>
+            </button>
+
+            <button
+              onClick={() => {
+                setActiveSection('payroll');
+                setShowProfileModal(true);
+              }}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+                activeSection === 'payroll'
+                  ? 'bg-indigo-600 text-white shadow-md glow-purple'
+                  : 'text-slate-400 hover:bg-slate-900 hover:text-slate-200'
+              }`}
+            >
+              <Wallet className="w-4 h-4" />
+              <span>Salary & Payroll</span>
+            </button>
+          </div>
+
+          {/* GRID LAYOUT: ATTENDANCE CLOCK WIDGET & PROFILE CARD */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             
             {/* ATTENDANCE CLOCK IN / OUT WIDGET */}
@@ -167,51 +241,61 @@ export default function EmployeeDashboardPage() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="p-4 rounded-2xl bg-slate-950/70 border border-slate-800/80 space-y-1">
                   <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Punch In Time</span>
-                  <p className="text-lg font-mono font-bold text-emerald-400">{isClockedIn ? (clockInTime || '09:00 AM') : '--:--'}</p>
-                  <span className="text-[10px] text-slate-500">Scheduled: 09:00 AM</span>
+                  <p className="text-lg font-mono font-bold text-emerald-400">
+                    {isClockedIn ? (clockInTime || '09:00 AM') : 'NOT CHECKED IN'}
+                  </p>
+                  <span className="text-[10px] text-slate-500">Shift Schedule: 09:00 AM</span>
                 </div>
 
                 <div className="p-4 rounded-2xl bg-slate-950/70 border border-slate-800/80 space-y-1">
                   <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Current Shift Status</span>
                   <p className="text-sm font-bold text-indigo-300 flex items-center gap-1.5 pt-1">
-                    <span className={`w-2 h-2 rounded-full ${isClockedIn ? 'bg-emerald-500 animate-pulse' : 'bg-slate-500'}`} />
-                    {isClockedIn ? 'ON SHIFT (CLOCKED IN)' : 'CLOCKED OUT'}
+                    <span className={`w-2.5 h-2.5 rounded-full ${isClockedIn ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
+                    {isClockedIn ? 'ON SHIFT (CLOCKED IN)' : 'NOT CHECKED IN'}
                   </p>
                   <span className="text-[10px] text-slate-500">Standard 8h Shift</span>
                 </div>
 
                 <div className="p-4 rounded-2xl bg-slate-950/70 border border-slate-800/80 space-y-1">
                   <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Work Duration</span>
-                  <p className="text-lg font-mono font-bold text-white">{isClockedIn ? '5h 30m' : '0h 00m'}</p>
+                  <p className="text-lg font-mono font-bold text-white">
+                    {isClockedIn ? '5h 30m' : '0h 00m'}
+                  </p>
                   <span className="text-[10px] text-emerald-400">Target: 8h 00m</span>
                 </div>
               </div>
 
-              {/* Action Button */}
+              {/* Clock Action Toggle Button */}
               <div className="pt-2">
-                {isClockedIn ? (
-                  <button
-                    onClick={clockOut}
-                    className="w-full py-3.5 px-4 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs flex items-center justify-center gap-2 transition-all shadow-lg"
-                  >
-                    <Square className="w-4 h-4 fill-white" />
-                    <span>Clock Out & End Break Session</span>
-                  </button>
-                ) : (
-                  <button
-                    onClick={clockIn}
-                    className="w-full py-3.5 px-4 rounded-2xl bg-[#6366f1] hover:bg-indigo-600 text-white font-extrabold text-xs flex items-center justify-center gap-2 transition-all shadow-lg glow-purple"
-                  >
-                    <Play className="w-4 h-4 fill-white" />
-                    <span>Clock In Now</span>
-                  </button>
-                )}
+                <button
+                  onClick={handleClockToggle}
+                  className={`w-full py-4 px-6 rounded-2xl text-white font-extrabold text-sm flex items-center justify-center gap-2.5 transition-all shadow-xl ${
+                    isClockedIn
+                      ? 'bg-rose-600 hover:bg-rose-700 glow-rose'
+                      : 'bg-[#6366f1] hover:bg-indigo-600 glow-purple'
+                  }`}
+                >
+                  {isClockedIn ? (
+                    <>
+                      <Square className="w-4 h-4 fill-white" />
+                      <span>Clock Out & End Break Session</span>
+                    </>
+                  ) : (
+                    <>
+                      <Play className="w-4 h-4 fill-white" />
+                      <span>Clock In Now</span>
+                    </>
+                  )}
+                </button>
               </div>
             </div>
 
             {/* PROFILE CARD VIEW */}
             <div 
-              onClick={() => setShowProfileModal(true)}
+              onClick={() => {
+                setActiveSection('payroll');
+                setShowProfileModal(true);
+              }}
               className="bg-slate-900/80 border border-slate-800 hover:border-indigo-500/50 rounded-3xl p-6 shadow-xl space-y-4 cursor-pointer transition-all group"
             >
               <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
@@ -232,7 +316,7 @@ export default function EmployeeDashboardPage() {
                   <h4 className="text-sm font-bold text-white">{user?.fullName || 'Sarah Jenkins'}</h4>
                   <p className="text-xs text-slate-400">{user?.email}</p>
                   <span className="inline-block mt-1 text-[10px] font-bold text-indigo-300 bg-indigo-950 px-2 py-0.5 rounded-md border border-indigo-800">
-                    {user?.department}
+                    {user?.department || 'Product & Design'}
                   </span>
                 </div>
               </div>
@@ -252,7 +336,14 @@ export default function EmployeeDashboardPage() {
                 </div>
               </div>
 
-              <div className="pt-2 text-center text-[11px] text-indigo-400 font-bold">
+              {/* Inline trigger requested by user */}
+              <div 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowProfileModal(true);
+                }}
+                className="pt-2 text-center text-[11px] text-indigo-400 hover:text-indigo-300 font-bold transition-colors underline"
+              >
                 Click to view Salary & Payroll statement →
               </div>
             </div>
@@ -271,7 +362,7 @@ export default function EmployeeDashboardPage() {
                 </div>
                 <button
                   onClick={() => setShowAttendanceModal(true)}
-                  className="text-xs text-indigo-400 hover:text-indigo-300 font-bold flex items-center gap-1"
+                  className="text-xs text-indigo-400 hover:text-indigo-300 font-bold flex items-center gap-1 hover:underline"
                 >
                   <span>Open Calendar Picker</span>
                   <ExternalLink className="w-3 h-3" />
@@ -294,7 +385,7 @@ export default function EmployeeDashboardPage() {
                       <tr key={log.id} className="hover:bg-slate-800/40">
                         <td className="py-2.5 font-mono text-slate-300">{log.date}</td>
                         <td className="py-2.5 font-mono text-emerald-400">{log.clockIn}</td>
-                        <td className="py-2.5 font-mono text-slate-400">{log.clockOut || 'Active'}</td>
+                        <td className="py-2.5 font-mono text-slate-400">{log.clockOut || 'Shift Active'}</td>
                         <td className="py-2.5 font-mono text-slate-200">{log.workHours}</td>
                         <td className="py-2.5">
                           <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
@@ -321,7 +412,7 @@ export default function EmployeeDashboardPage() {
                 </div>
                 <button
                   onClick={() => setShowLeaveModal(true)}
-                  className="text-xs text-indigo-400 hover:text-indigo-300 font-bold flex items-center gap-1"
+                  className="text-xs text-indigo-400 hover:text-indigo-300 font-bold flex items-center gap-1 hover:underline"
                 >
                   <span>Open Leave Modal</span>
                   <ExternalLink className="w-3 h-3" />
@@ -345,7 +436,7 @@ export default function EmployeeDashboardPage() {
                         <td className="py-2.5 text-slate-400 text-[11px] font-mono">{req.startDate} to {req.endDate}</td>
                         <td className="py-2.5 font-mono text-indigo-300">{req.totalDays}d</td>
                         <td className="py-2.5">
-                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                          <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
                             req.status === 'APPROVED' || req.status === 'Approved'
                               ? 'bg-emerald-950 text-emerald-300 border border-emerald-800'
                               : req.status === 'REJECTED' || req.status === 'Rejected'
@@ -367,7 +458,7 @@ export default function EmployeeDashboardPage() {
         </main>
       </div>
 
-      {/* THREE DIAGRAM WORKFLOW MODALS */}
+      {/* INTERACTIVE WORKFLOW OVERLAY MODALS */}
       <LeaveManagementModal
         isOpen={showLeaveModal}
         onClose={() => setShowLeaveModal(false)}
@@ -384,5 +475,20 @@ export default function EmployeeDashboardPage() {
       />
 
     </div>
+  );
+}
+
+export default function EmployeeDashboardPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#0b1120] text-slate-100 flex items-center justify-center p-6">
+        <div className="flex items-center gap-3">
+          <div className="w-5 h-5 border-2 border-[#6366f1] border-t-transparent rounded-full animate-spin" />
+          <span className="text-xs font-semibold text-slate-400">Loading Employee Workspace...</span>
+        </div>
+      </div>
+    }>
+      <EmployeeDashboardContent />
+    </Suspense>
   );
 }
