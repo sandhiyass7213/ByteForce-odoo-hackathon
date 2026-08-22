@@ -1,8 +1,9 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
+  --background: #0b1120;
+  --foreground: #f8fafc;
+  --accent-purple: #6366f1;
 }
 
 @theme inline {
@@ -12,16 +13,9 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #020617;
-    --foreground: #f8fafc;
-  }
-}
-
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background-color: #0b1120;
+  color: #f8fafc;
   font-family: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   overflow-x: hidden;
 }
@@ -32,12 +26,30 @@ body {
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: #0b1120;
 }
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #334155;
   border-radius: 9999px;
 }
-.dark ::-webkit-scrollbar-thumb {
-  background: #334155;
+::-webkit-scrollbar-thumb:hover {
+  background: #6366f1;
 }
+
+/* Glowing Accent Utilities */
+.glow-purple {
+  box-shadow: 0 0 20px -3px rgba(99, 102, 241, 0.45);
+}
+
+.glow-purple-lg {
+  box-shadow: 0 0 35px -5px rgba(99, 102, 241, 0.6);
+}
+
+.glow-purple-hover:hover {
+  box-shadow: 0 0 25px -2px rgba(99, 102, 241, 0.55);
+}
+
+.glow-amber {
+  box-shadow: 0 0 20px -3px rgba(245, 158, 11, 0.45);
+}
+
