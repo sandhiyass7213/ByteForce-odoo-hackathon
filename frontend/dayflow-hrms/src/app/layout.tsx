@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { AuthProvider } from "./context/AuthContext";
+import { AuthProvider } from "../context/AuthContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Dayflow - Human Resource Management System (HRMS)",
-  description: "Modern Employee & Admin HR Management System Dashboard",
+  description: "Enterprise HR Management System Dashboard with Strict Role Isolation",
 };
 
 export default function RootLayout({
@@ -28,10 +28,9 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}
     >
-      <body className="min-h-full flex flex-col bg-[#0b1120] text-slate-100">
+      <body className="min-h-full flex flex-col bg-[#0b1120] text-slate-100 selection:bg-indigo-500 selection:text-white">
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );
 }
-

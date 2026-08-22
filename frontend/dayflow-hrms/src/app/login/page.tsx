@@ -17,14 +17,14 @@ import {
   Send,
   ShieldCheck
 } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
-import { Role } from '../types/hrms';
+import { useAuth } from '../../context/AuthContext';
+import { UserRole } from '../../types/hrms';
 
 export default function LoginPage() {
   const router = useRouter();
   const { login, sendOtp, verifyOtp, switchRole } = useAuth();
 
-  const [activePortal, setActivePortal] = useState<Role>('employee');
+  const [activePortal, setActivePortal] = useState<UserRole>('EMPLOYEE');
   const [authMode, setAuthMode] = useState<'otp' | 'password'>('otp');
 
   // Form State
@@ -41,8 +41,8 @@ export default function LoginPage() {
   const [successMsg, setSuccessMsg] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Switch role portal
-  const handlePortalSwitch = (portal: Role) => {
+  // Switch active role portal
+  const handlePortalSwitch = (portal: UserRole) => {
     setActivePortal(portal);
     switchRole(portal);
     setErrorMsg('');
@@ -51,7 +51,7 @@ export default function LoginPage() {
     setOtpCode('');
     setSimulatedOtp(null);
 
-    if (portal === 'admin') {
+    if (portal === 'HR_ADMIN') {
       setEmail('elena.rostova@dayflow.io');
       setEmployeeId('HR-1001');
     } else {
@@ -77,11 +77,11 @@ export default function LoginPage() {
       if (res.success) {
         setOtpSent(true);
         setSimulatedOtp(res.code);
-        setSuccessMsg(`OTP sent to ${email}. Check the test toast banner below!`);
+        setSuccessMsg(`OTP sent to ${email}. Use the test toast banner code below!`);
       } else {
         setErrorMsg('Failed to send OTP. Please try again.');
       }
-    }, 600);
+    }, 500);
   };
 
   // Step 2: Verify OTP & Submit
@@ -100,18 +100,18 @@ export default function LoginPage() {
       setIsLoading(false);
 
       if (success) {
-        if (activePortal === 'admin') {
+        if (activePortal === 'HR_ADMIN') {
           router.push('/admin/dashboard');
         } else {
           router.push('/employee/dashboard');
         }
       } else {
-        setErrorMsg('Invalid OTP code. Please enter the generated test OTP code.');
+        setErrorMsg('Invalid OTP code. Please enter the generated test code.');
       }
-    }, 600);
+    }, 500);
   };
 
-  // Standard Password Submit fallback
+  // Password Login fallback
   const handlePasswordLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
@@ -127,7 +127,7 @@ export default function LoginPage() {
       setIsLoading(false);
 
       if (success) {
-        if (activePortal === 'admin') {
+        if (activePortal === 'HR_ADMIN') {
           router.push('/admin/dashboard');
         } else {
           router.push('/employee/dashboard');
@@ -135,7 +135,7 @@ export default function LoginPage() {
       } else {
         setErrorMsg('Invalid login credentials.');
       }
-    }, 600);
+    }, 500);
   };
 
   return (
@@ -161,7 +161,7 @@ export default function LoginPage() {
 
         <div className="flex items-center gap-2 text-xs text-slate-400 bg-slate-900/60 px-3.5 py-1.5 rounded-full border border-slate-800 backdrop-blur-md">
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="font-medium text-slate-300">System Online</span>
+          <span className="font-medium text-slate-300">OTP Auth Ready</span>
         </div>
       </header>
 
@@ -169,59 +169,59 @@ export default function LoginPage() {
       <main className="max-w-md w-full mx-auto my-auto relative z-10 py-6">
         <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 relative overflow-hidden">
           
-          {/* Header Title & Portal Switcher */}
+          {/* Title & Role Switcher */}
           <div className="space-y-3">
             <div className="text-center space-y-1">
               <h2 className="text-2xl font-black text-white tracking-tight">
                 Secure Portal Login
               </h2>
               <p className="text-xs text-slate-400">
-                Choose your login portal mode to access your Dayflow workspace
+                Select your portal role level to log in to Dayflow
               </p>
             </div>
 
-            {/* Role Switcher Switch */}
+            {/* Role Switcher Toggle */}
             <div className="grid grid-cols-2 p-1.5 bg-slate-950/80 rounded-2xl border border-slate-800">
               <button
                 type="button"
-                onClick={() => handlePortalSwitch('employee')}
+                onClick={() => handlePortalSwitch('EMPLOYEE')}
                 className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all duration-200 ${
-                  activePortal === 'employee'
+                  activePortal === 'EMPLOYEE'
                     ? 'bg-[#6366f1] text-white glow-purple'
                     : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
                 <User className="w-4 h-4" />
-                <span>Employee Login</span>
+                <span>Employee Portal</span>
               </button>
 
               <button
                 type="button"
-                onClick={() => handlePortalSwitch('admin')}
+                onClick={() => handlePortalSwitch('HR_ADMIN')}
                 className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all duration-200 ${
-                  activePortal === 'admin'
+                  activePortal === 'HR_ADMIN'
                     ? 'bg-amber-500 text-slate-950 font-black glow-amber'
                     : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
                 <Shield className="w-4 h-4" />
-                <span>HR / Admin Login</span>
+                <span>HR / Admin Portal</span>
               </button>
             </div>
           </div>
 
-          {/* Quick Demo Pre-fill Pill */}
+          {/* Quick Pre-fill Demo Button */}
           <div className="p-3 rounded-2xl bg-indigo-950/40 border border-indigo-800/40 flex items-center justify-between text-xs">
             <div className="flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-indigo-400 shrink-0" />
               <span className="text-indigo-200">
-                Demo User: <strong className="text-white capitalize">{activePortal === 'admin' ? 'Elena Rostova (HR)' : 'Sarah Jenkins'}</strong>
+                Demo: <strong className="text-white capitalize">{activePortal === 'HR_ADMIN' ? 'Elena Rostova (HR Admin)' : 'Sarah Jenkins (Employee)'}</strong>
               </span>
             </div>
             <button
               type="button"
               onClick={() => {
-                if (activePortal === 'admin') {
+                if (activePortal === 'HR_ADMIN') {
                   setEmail('elena.rostova@dayflow.io');
                   setEmployeeId('HR-1001');
                 } else {
@@ -231,11 +231,11 @@ export default function LoginPage() {
               }}
               className="text-[11px] font-bold text-indigo-400 hover:text-indigo-300 underline underline-offset-2"
             >
-              Autofill Email
+              Autofill
             </button>
           </div>
 
-          {/* Auth Method Tabs (Email OTP vs Password) */}
+          {/* Auth Method Tabs */}
           <div className="flex border-b border-slate-800 text-xs font-bold">
             <button
               type="button"
@@ -276,13 +276,13 @@ export default function LoginPage() {
             </div>
           )}
 
-          {/* Simulated OTP Notification Toast Box for Demo */}
+          {/* Simulated OTP Banner Toast */}
           {simulatedOtp && (
             <div className="p-4 rounded-2xl bg-gradient-to-r from-indigo-950 to-purple-950 border border-indigo-700/60 shadow-xl space-y-2 animate-in fade-in">
               <div className="flex items-center justify-between text-xs">
                 <span className="font-bold text-indigo-300 flex items-center gap-1.5">
                   <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                  Email OTP Verification Code Sent!
+                  Email OTP Code Sent!
                 </span>
                 <span className="text-[10px] text-slate-400">Demo Code</span>
               </div>
@@ -302,11 +302,11 @@ export default function LoginPage() {
             </div>
           )}
 
-          {/* MODE 1: EMAIL OTP AUTHENTICATION */}
+          {/* EMAIL OTP LOGIN */}
           {authMode === 'otp' && (
             <>
               {!otpSent ? (
-                /* Step 1 Form: Send OTP */
+                /* Step 1: Send OTP */
                 <form onSubmit={handleSendOtp} className="space-y-4">
                   <div className="space-y-1">
                     <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider">
@@ -327,14 +327,14 @@ export default function LoginPage() {
 
                   <div className="space-y-1">
                     <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider">
-                      {activePortal === 'admin' ? 'HR Director Code' : 'Employee ID / Code'}
+                      {activePortal === 'HR_ADMIN' ? 'HR Director Code' : 'Employee Code'}
                     </label>
                     <div className="relative">
                       <BadgeCheck className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                       <input
                         type="text"
                         required
-                        placeholder={activePortal === 'admin' ? 'HR-1001' : 'DF-8902'}
+                        placeholder={activePortal === 'HR_ADMIN' ? 'HR-1001' : 'DF-8902'}
                         value={employeeId}
                         onChange={(e) => setEmployeeId(e.target.value)}
                         className="w-full pl-10 pr-4 py-2.5 text-xs bg-slate-950/70 border border-slate-800 rounded-xl text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#6366f1] transition-all"
@@ -346,7 +346,7 @@ export default function LoginPage() {
                     type="submit"
                     disabled={isLoading}
                     className={`w-full py-3 px-4 rounded-xl text-xs font-extrabold text-white flex items-center justify-center gap-2 transition-all duration-200 mt-2 ${
-                      activePortal === 'admin'
+                      activePortal === 'HR_ADMIN'
                         ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-slate-950 glow-amber'
                         : 'bg-[#6366f1] hover:bg-indigo-600 glow-purple-lg'
                     }`}
@@ -362,7 +362,7 @@ export default function LoginPage() {
                   </button>
                 </form>
               ) : (
-                /* Step 2 Form: Verify OTP */
+                /* Step 2: Verify OTP */
                 <form onSubmit={handleVerifyOtpSubmit} className="space-y-4 animate-in fade-in">
                   <div className="space-y-1">
                     <div className="flex items-center justify-between">
@@ -399,7 +399,7 @@ export default function LoginPage() {
                     type="submit"
                     disabled={isLoading}
                     className={`w-full py-3 px-4 rounded-xl text-xs font-extrabold text-white flex items-center justify-center gap-2 transition-all duration-200 mt-2 ${
-                      activePortal === 'admin'
+                      activePortal === 'HR_ADMIN'
                         ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-slate-950 glow-amber'
                         : 'bg-[#6366f1] hover:bg-indigo-600 glow-purple-lg'
                     }`}
@@ -408,7 +408,7 @@ export default function LoginPage() {
                       <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     ) : (
                       <>
-                        <span>Verify OTP & Launch {activePortal === 'admin' ? 'HR Portal' : 'Employee Portal'}</span>
+                        <span>Verify OTP & Launch {activePortal === 'HR_ADMIN' ? 'HR Portal' : 'Employee Portal'}</span>
                         <ArrowRight className="w-4 h-4" />
                       </>
                     )}
@@ -418,7 +418,7 @@ export default function LoginPage() {
             </>
           )}
 
-          {/* MODE 2: STANDARD PASSWORD AUTHENTICATION */}
+          {/* PASSWORD LOGIN FALLBACK */}
           {authMode === 'password' && (
             <form onSubmit={handlePasswordLogin} className="space-y-4">
               <div className="space-y-1">
@@ -459,7 +459,7 @@ export default function LoginPage() {
                 type="submit"
                 disabled={isLoading}
                 className={`w-full py-3 px-4 rounded-xl text-xs font-extrabold text-white flex items-center justify-center gap-2 transition-all duration-200 mt-2 ${
-                  activePortal === 'admin'
+                  activePortal === 'HR_ADMIN'
                     ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-slate-950 glow-amber'
                     : 'bg-[#6366f1] hover:bg-indigo-600 glow-purple-lg'
                 }`}
@@ -476,20 +476,12 @@ export default function LoginPage() {
             </form>
           )}
 
-          {/* Footer link to Signup */}
-          <div className="text-center pt-2 border-t border-slate-800 text-xs text-slate-400">
-            Don't have an employee profile yet?{' '}
-            <Link href="/signup" className="text-[#6366f1] hover:text-indigo-400 font-bold underline underline-offset-2">
-              Sign Up Here
-            </Link>
-          </div>
-
         </div>
       </main>
 
       {/* Footer */}
       <footer className="max-w-6xl mx-auto w-full text-center text-xs text-slate-500 py-4 relative z-10">
-        © 2026 Dayflow HRMS. Email OTP Authentication & Role-Based Isolation.
+        © 2026 Dayflow HRMS. Strict Role Isolation & OTP Security.
       </footer>
 
     </div>
