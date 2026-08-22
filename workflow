@@ -19,3 +19,4 @@ Implement Tab-based Section Switching:
 4. Fix Interactivity:
    - Ensure clicking 'Approve' or 'Reject' on any leave request updates the row state in real-time.
    - Ensure 'use client' directive is present at the top.
+...
