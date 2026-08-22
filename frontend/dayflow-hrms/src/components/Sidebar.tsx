@@ -24,6 +24,8 @@ interface SidebarProps {
   setIsCollapsed: (collapsed: boolean) => void;
   isOpenMobile: boolean;
   setIsOpenMobile: (open: boolean) => void;
+  activeTab?: string;
+  onTabChange?: (tabId: any) => void;
 }
 
 export default function Sidebar({
@@ -31,10 +33,12 @@ export default function Sidebar({
   setIsCollapsed,
   isOpenMobile,
   setIsOpenMobile,
+  activeTab,
+  onTabChange,
 }: SidebarProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const currentTab = searchParams.get('tab') || 'overview';
+  const currentTab = activeTab || searchParams.get('tab') || 'attendance';
   const { role, logout, user } = useAuth();
 
   // Navigation Items for EMPLOYEE Role (HR Admin options completely HIDDEN)
@@ -43,7 +47,7 @@ export default function Sidebar({
       id: 'attendance',
       name: 'Attendance Tracker',
       icon: Clock,
-      href: '/employee/dashboard',
+      href: '/employee/dashboard?tab=attendance',
       badge: 'Live',
       badgeColor: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
     },
@@ -73,7 +77,7 @@ export default function Sidebar({
       id: 'overview',
       name: 'HR Analytics',
       icon: LayoutDashboard,
-      href: '/admin/dashboard',
+      href: '/admin/dashboard?tab=overview',
     },
     {
       id: 'leaves',
@@ -172,16 +176,19 @@ export default function Sidebar({
           {navItems.map((item) => {
             const Icon = item.icon;
             
-            // Check active state based on specific tab ID or exact route match
-            const isItemActive = role === 'HR_ADMIN'
-              ? (item.id === 'overview' && (currentTab === 'overview' || !searchParams.get('tab'))) || currentTab === item.id
-              : (item.id === 'attendance' && (currentTab === 'overview' || !searchParams.get('tab'))) || currentTab === item.id;
+            const isItemActive = currentTab === item.id || 
+              (currentTab === 'overview' && item.id === 'overview') ||
+              (currentTab === 'attendance' && item.id === 'attendance');
 
             return (
-              <Link
+              <button
                 key={item.id}
-                href={item.href}
-                className={`flex items-center gap-3 px-3.5 py-3 rounded-2xl text-xs font-bold transition-all duration-200 group relative ${
+                onClick={() => {
+                  if (onTabChange) {
+                    onTabChange(item.id);
+                  }
+                }}
+                className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl text-xs font-bold transition-all duration-200 group relative text-left ${
                   isItemActive
                     ? 'bg-[#6366f1] text-white shadow-lg glow-purple'
                     : 'text-slate-400 hover:text-slate-100 hover:bg-slate-900/80'
@@ -201,7 +208,7 @@ export default function Sidebar({
                     )}
                   </div>
                 )}
-              </Link>
+              </button>
             );
           })}
         </nav>
