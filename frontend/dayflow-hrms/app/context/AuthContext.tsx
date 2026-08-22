@@ -83,6 +83,9 @@ interface AuthContextType {
   isLoading: boolean;
   leaveRequests: LeaveRequest[];
   employeesList: EmployeeProfile[];
+  activeOtpCode: string | null;
+  sendOtp: (email: string) => { success: boolean; code: string };
+  verifyOtp: (email: string, code: string, targetRole: Role) => boolean;
   login: (email: string, pass: string, targetRole: Role) => boolean;
   signup: (formData: {
     fullName: string;
@@ -109,6 +112,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>(initialLeaveRequests);
   const [employeesList, setEmployeesList] = useState<EmployeeProfile[]>(mockEmployeesList);
+  const [activeOtpCode, setActiveOtpCode] = useState<string | null>(null);
 
   useEffect(() => {
     try {
@@ -120,8 +124,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (savedUser) {
         setUser(JSON.parse(savedUser));
       } else {
-        // Default demo login as Employee Sarah Jenkins
-        setUser(initialProfile);
+        setUser(null);
       }
 
       if (savedRole) {
@@ -137,11 +140,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (e) {
       console.error('Error restoring session from localStorage:', e);
-      setUser(initialProfile);
+      setUser(null);
     } finally {
       setIsLoading(false);
     }
   }, []);
+
+  const sendOtp = (email: string) => {
+    // Generate 6-digit random code
+    const generated = Math.floor(100000 + Math.random() * 900000).toString();
+    setActiveOtpCode(generated);
+    return { success: true, code: generated };
+  };
+
+  const verifyOtp = (email: string, code: string, targetRole: Role): boolean => {
+    // Accept generated OTP or demo bypass "123456" or "892104"
+    if (activeOtpCode && code.trim() !== activeOtpCode && code.trim() !== '123456' && code.trim() !== '892104') {
+      return false;
+    }
+
+    let matchedUser: EmployeeProfile | undefined;
+    if (targetRole === 'admin' || email.toLowerCase().includes('admin') || email.toLowerCase().includes('elena')) {
+      matchedUser = adminProfile;
+    } else {
+      matchedUser = employeesList.find((e) => e.email.toLowerCase() === email.toLowerCase()) || initialProfile;
+    }
+
+    setUser(matchedUser);
+    setRole(targetRole);
+    localStorage.setItem('dayflow_user', JSON.stringify(matchedUser));
+    localStorage.setItem('dayflow_role', targetRole);
+    setActiveOtpCode(null);
+    return true;
+  };
 
   const login = (email: string, pass: string, targetRole: Role): boolean => {
     let matchedUser: EmployeeProfile | undefined;
@@ -223,9 +254,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const switchRole = (newRole: Role) => {
     setRole(newRole);
     localStorage.setItem('dayflow_role', newRole);
-    if (newRole === 'admin' && user?.email !== adminProfile.email) {
-      // Switch profile context to admin if desired or keep user with admin role
-    }
   };
 
   const handleApplyLeave = (newReqData: Omit<LeaveRequest, 'id' | 'status' | 'appliedOn'>) => {
@@ -287,6 +315,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isLoading,
         leaveRequests,
         employeesList,
+        activeOtpCode,
+        sendOtp,
+        verifyOtp,
         login,
         signup,
         logout,

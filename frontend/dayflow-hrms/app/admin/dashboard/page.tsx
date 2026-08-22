@@ -64,12 +64,16 @@ export default function AdminDashboardPage() {
   const [isOpenMobile, setIsOpenMobile] = useState<boolean>(false);
   const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
 
-  // Auth protection check
+  // Auth & Strict RBAC Route Guard Protection
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push('/login');
+    if (!isLoading) {
+      if (!isAuthenticated) {
+        router.push('/login');
+      } else if (role !== 'admin') {
+        router.push('/employee/dashboard');
+      }
     }
-  }, [isLoading, isAuthenticated, router]);
+  }, [isLoading, isAuthenticated, role, router]);
 
   if (isLoading) {
     return (

@@ -102,33 +102,22 @@ export default function Header({
           </div>
         </div>
 
-        {/* Right Side: Role Switcher, Portal Status Badge & Profile */}
+        {/* Right Side: Role Badge, Notifications & Profile Menu */}
         <div className="flex items-center gap-3 sm:gap-4">
           
-          {/* Dynamic Role Switcher Toggle */}
-          <div className="flex items-center bg-slate-900 p-1 rounded-xl border border-slate-800">
-            <button
-              onClick={() => handleRoleToggle('employee')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                role === 'employee'
-                  ? 'bg-[#6366f1] text-white glow-purple'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              <User className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Employee Portal</span>
-            </button>
-            <button
-              onClick={() => handleRoleToggle('admin')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                role === 'admin'
-                  ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-black glow-amber'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              <Shield className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">HR / Admin Portal</span>
-            </button>
+          {/* Active Mode Badge (Strict Role Isolation) */}
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-xs font-bold">
+            {role === 'admin' ? (
+              <div className="flex items-center gap-2 text-amber-400">
+                <Shield className="w-4 h-4 text-amber-400" />
+                <span className="hidden sm:inline">HR / Admin Active</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 text-indigo-300">
+                <User className="w-4 h-4 text-indigo-400" />
+                <span className="hidden sm:inline">Employee Portal Active</span>
+              </div>
+            )}
           </div>
 
           {/* Notifications Dropdown */}
@@ -241,17 +230,6 @@ export default function Header({
                   >
                     <Building className="w-4 h-4 text-indigo-400" />
                     <span>My Workspace</span>
-                  </button>
-
-                  <button 
-                    onClick={() => {
-                      setShowUserDropdown(false);
-                      handleRoleToggle(role === 'admin' ? 'employee' : 'admin');
-                    }}
-                    className="w-full text-left px-3 py-2 text-slate-300 hover:bg-slate-800 rounded-xl flex items-center gap-2"
-                  >
-                    <KeyRound className="w-4 h-4 text-amber-400" />
-                    <span>Switch to {role === 'admin' ? 'Employee Portal' : 'HR Admin Portal'}</span>
                   </button>
 
                   <button 
