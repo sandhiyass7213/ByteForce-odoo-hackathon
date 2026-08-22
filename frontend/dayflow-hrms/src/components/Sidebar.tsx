@@ -38,8 +38,8 @@ export default function Sidebar({
 }: SidebarProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const currentTab = activeTab || searchParams.get('tab') || 'attendance';
   const { role, logout, user } = useAuth();
+  const currentTab = activeTab || searchParams.get('tab') || (role === 'HR_ADMIN' ? 'analytics' : 'attendance');
 
   // Navigation Items for EMPLOYEE Role (HR Admin options completely HIDDEN)
   const employeeNavItems = [
@@ -74,16 +74,16 @@ export default function Sidebar({
   // Navigation Items for HR_ADMIN Role
   const adminNavItems = [
     {
-      id: 'overview',
+      id: 'analytics',
       name: 'HR Analytics',
       icon: LayoutDashboard,
-      href: '/admin/dashboard?tab=overview',
+      href: '/admin/dashboard?tab=analytics',
     },
     {
-      id: 'leaves',
-      name: 'Leave Approval Suite',
+      id: 'approvals',
+      name: 'Leave Approvals',
       icon: CheckSquare,
-      href: '/admin/dashboard?tab=leaves',
+      href: '/admin/dashboard?tab=approvals',
       badge: 'Action Needed',
       badgeColor: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
     },
@@ -177,8 +177,12 @@ export default function Sidebar({
             const Icon = item.icon;
             
             const isItemActive = currentTab === item.id || 
-              (currentTab === 'overview' && item.id === 'overview') ||
-              (currentTab === 'attendance' && item.id === 'attendance');
+              (currentTab === 'overview' && item.id === 'analytics') ||
+              (currentTab === 'leaves' && item.id === 'approvals');
+
+            const activeColor = role === 'HR_ADMIN' 
+              ? 'bg-gradient-to-r from-amber-600 to-orange-600 text-white shadow-lg glow-amber'
+              : 'bg-[#6366f1] text-white shadow-lg glow-purple';
 
             return (
               <button
@@ -190,7 +194,7 @@ export default function Sidebar({
                 }}
                 className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl text-xs font-bold transition-all duration-200 group relative text-left ${
                   isItemActive
-                    ? 'bg-[#6366f1] text-white shadow-lg glow-purple'
+                    ? activeColor
                     : 'text-slate-400 hover:text-slate-100 hover:bg-slate-900/80'
                 }`}
               >
@@ -218,17 +222,17 @@ export default function Sidebar({
           <div className="p-2 bg-slate-900/80 border border-slate-800 rounded-2xl flex items-center justify-between">
             <div className="flex items-center gap-2.5 min-w-0">
               <img
-                src={user?.avatar || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80'}
-                alt={user?.fullName || 'User Avatar'}
-                className="w-8 h-8 rounded-xl object-cover ring-2 ring-indigo-500/40 shrink-0"
+                src={user?.avatar || 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80'}
+                alt={user?.fullName || 'Elena Rostova'}
+                className="w-8 h-8 rounded-xl object-cover ring-2 ring-amber-500/40 shrink-0"
               />
               {!isCollapsed && (
                 <div className="flex flex-col min-w-0">
                   <span className="text-xs font-bold text-slate-100 truncate">
-                    {user?.fullName || 'Sarah Jenkins'}
+                    {user?.fullName || 'Elena Rostova'}
                   </span>
-                  <span className="text-[10px] text-slate-400 truncate">
-                    {user?.designation || 'Specialist'}
+                  <span className="text-[10px] text-amber-400 font-semibold truncate">
+                    HR Admin Director
                   </span>
                 </div>
               )}
