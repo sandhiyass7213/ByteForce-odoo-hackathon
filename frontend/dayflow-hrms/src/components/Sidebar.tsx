@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { 
   LayoutDashboard, 
   Clock, 
@@ -33,11 +33,14 @@ export default function Sidebar({
   setIsOpenMobile,
 }: SidebarProps) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const currentTab = searchParams.get('tab') || 'overview';
   const { role, logout, user } = useAuth();
 
   // Navigation Items for EMPLOYEE Role (HR Admin options completely HIDDEN)
   const employeeNavItems = [
     {
+      id: 'attendance',
       name: 'Attendance Tracker',
       icon: Clock,
       href: '/employee/dashboard',
@@ -45,45 +48,52 @@ export default function Sidebar({
       badgeColor: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
     },
     {
+      id: 'leaves',
       name: 'Leave Applications',
       icon: CalendarDays,
-      href: '/employee/dashboard',
+      href: '/employee/dashboard?tab=leaves',
     },
     {
+      id: 'profile',
       name: 'My Profile',
       icon: UserCircle,
-      href: '/employee/dashboard',
+      href: '/employee/dashboard?tab=profile',
     },
     {
+      id: 'payroll',
       name: 'Salary & Payroll',
       icon: Wallet,
-      href: '/employee/dashboard',
+      href: '/employee/dashboard?tab=payroll',
     },
   ];
 
   // Navigation Items for HR_ADMIN Role
   const adminNavItems = [
     {
+      id: 'overview',
       name: 'HR Analytics',
       icon: LayoutDashboard,
       href: '/admin/dashboard',
     },
     {
+      id: 'leaves',
       name: 'Leave Approval Suite',
       icon: CheckSquare,
-      href: '/admin/dashboard',
+      href: '/admin/dashboard?tab=leaves',
       badge: 'Action Needed',
       badgeColor: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
     },
     {
+      id: 'directory',
       name: 'Employee Directory',
       icon: Users,
-      href: '/admin/dashboard',
+      href: '/admin/dashboard?tab=directory',
     },
     {
+      id: 'governance',
       name: 'Admin Governance',
       icon: Shield,
-      href: '/admin/dashboard',
+      href: '/admin/dashboard?tab=governance',
     },
   ];
 
@@ -161,27 +171,31 @@ export default function Sidebar({
         <nav className="flex-1 px-3 space-y-1.5 overflow-y-auto">
           {navItems.map((item) => {
             const Icon = item.icon;
-            const isActive = pathname === item.href;
+            
+            // Check active state based on specific tab ID or exact route match
+            const isItemActive = role === 'HR_ADMIN'
+              ? (item.id === 'overview' && (currentTab === 'overview' || !searchParams.get('tab'))) || currentTab === item.id
+              : (item.id === 'attendance' && (currentTab === 'overview' || !searchParams.get('tab'))) || currentTab === item.id;
 
             return (
               <Link
-                key={item.name}
+                key={item.id}
                 href={item.href}
-                className={`flex items-center gap-3.5 px-3.5 py-3 rounded-2xl text-xs font-bold transition-all duration-200 group relative ${
-                  isActive
+                className={`flex items-center gap-3 px-3.5 py-3 rounded-2xl text-xs font-bold transition-all duration-200 group relative ${
+                  isItemActive
                     ? 'bg-[#6366f1] text-white shadow-lg glow-purple'
                     : 'text-slate-400 hover:text-slate-100 hover:bg-slate-900/80'
                 }`}
               >
                 <Icon className={`w-5 h-5 shrink-0 transition-transform group-hover:scale-110 ${
-                  isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-200'
+                  isItemActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-200'
                 }`} />
 
                 {!isCollapsed && (
-                  <div className="flex items-center justify-between w-full">
-                    <span className="truncate">{item.name}</span>
+                  <div className="flex items-center justify-between w-full min-w-0">
+                    <span className="truncate pr-1">{item.name}</span>
                     {item.badge && (
-                      <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-full border ${item.badgeColor}`}>
+                      <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-full border whitespace-nowrap shrink-0 ml-1 ${item.badgeColor}`}>
                         {item.badge}
                       </span>
                     )}

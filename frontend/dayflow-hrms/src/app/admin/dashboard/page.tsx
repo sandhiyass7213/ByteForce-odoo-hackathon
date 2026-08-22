@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   Users, 
@@ -104,12 +104,14 @@ export default function AdminDashboardPage() {
     <div className="min-h-screen bg-[#0b1120] text-slate-100 flex flex-col selection:bg-amber-500 selection:text-slate-950">
       
       {/* Sidebar Navigation */}
-      <Sidebar
-        isCollapsed={isCollapsed}
-        setIsCollapsed={setIsCollapsed}
-        isOpenMobile={isOpenMobile}
-        setIsOpenMobile={setIsOpenMobile}
-      />
+      <Suspense fallback={null}>
+        <Sidebar
+          isCollapsed={isCollapsed}
+          setIsCollapsed={setIsCollapsed}
+          isOpenMobile={isOpenMobile}
+          setIsOpenMobile={setIsOpenMobile}
+        />
+      </Suspense>
 
       {/* Main Content View */}
       <div className={`flex-1 flex flex-col transition-all duration-300 ${
